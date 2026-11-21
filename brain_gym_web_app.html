@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="mr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>मेमरी & फोकस जिम • Brain Gym (5x6 Min)</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Devanagari', 'Inter', sans-serif;
+            background: radial-gradient(circle at top right, #1e1b4b, #090d16 55%, #051b18 100%);
+            color: #f8fafc;
+            min-height: 100vh;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            overflow-x: hidden;
+        }
+
+        .font-mono-num {
+            font-family: 'Inter', monospace;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* ग्लास कार्ड्स */
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.78);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(148, 163, 184, 0.16);
+        }
+
+        /* मेमरी फ्लॅश ग्रीड */
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            aspect-ratio: 1 / 1;
+            width: 100%;
+            max-width: 310px;
+            margin: 0 auto;
+        }
+
+        .mem-tile {
+            border-radius: 16px;
+            background: rgba(30, 41, 59, 0.9);
+            border: 2px solid rgba(71, 85, 105, 0.55);
+            transition: transform 0.12s ease, background-color 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 1.15rem;
+            color: #090d16;
+            cursor: pointer;
+        }
+
+        .mem-tile:active {
+            transform: scale(0.93);
+        }
+
+        /* ॲनिमेशन्स */
+        @keyframes shakeAnim {
+            0%, 100% { transform: translateX(0); }
+            25%, 75% { transform: translateX(-6px); }
+            50% { transform: translateX(6px); }
+        }
+        .shake {
+            animation: shakeAnim 0.35s ease;
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.45; transform: scale(0.85); }
+        }
+        .live-dot {
+            animation: pulseGlow 1.5s infinite;
+        }
+
+        @keyframes popRule {
+            0% { transform: scale(0.96); }
+            50% { transform: scale(1.03); }
+            100% { transform: scale(1); }
+        }
+        .rule-pop {
+            animation: popRule 0.4s ease;
+        }
+    </style>
+</head>
+<body class="flex flex-col justify-between">
+
+    <!-- हेडर विभाग: दैनिक सेशन ट्रॅकर आणि टायमर्स -->
+    <header class="sticky top-0 z-30 bg-slate-950/85 backdrop-blur-md border-b border-slate-800/80 px-4 py-3">
+        <div class="max-w-4xl mx-auto flex flex-col gap-3">
+            <!-- पहिली ओळ: ब्रँड आणि टायमर्स -->
+            <div class="flex flex-wrap items-center justify-between gap-2">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500/20 to-indigo-500/25 border border-emerald-400/40 flex items-center justify-center text-xl shadow-lg">
+                        🧠
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-1.5">
+                            <h1 class="text-base sm:text-lg font-extrabold tracking-tight text-white">मेमरी & फोकस जिम</h1>
+                            <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-400/30">Brain Gym</span>
+                        </div>
+                        <p class="text-[11px] text-slate-400">५ सेशन्स × ६ मिनिटे = ३० मिनिटे दैनिक मर्यादा</p>
+                    </div>
+                </div>
+
+                <!-- टायमर्स ग्रुप -->
+                <div class="flex items-center gap-2 flex-wrap">
+                    <!-- सध्याचा टास्क (02:00) -->
+                    <div id="task-timer-box" class="bg-indigo-950/60 border border-indigo-500/40 rounded-xl px-2.5 py-1.5 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-indigo-400 live-dot"></span>
+                        <div>
+                            <div class="text-[10px] text-indigo-200/80 leading-none">टास्क (२ मि.)</div>
+                            <div id="ui-task-timer" class="font-mono-num text-sm font-bold text-indigo-300 mt-0.5">02:00</div>
+                        </div>
+                    </div>
+
+                    <!-- सध्याचे सेशन (06:00) -->
+                    <div class="bg-sky-950/50 border border-sky-500/35 rounded-xl px-2.5 py-1.5 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-sky-400 live-dot"></span>
+                        <div>
+                            <div class="text-[10px] text-sky-200/80 leading-none">सेशन (६ मि.)</div>
+                            <div id="ui-session-timer" class="font-mono-num text-sm font-bold text-sky-300 mt-0.5">06:00</div>
+                        </div>
+                    </div>
+
+                    <!-- एकूण दैनिक वेळ (30:00) -->
+                    <div class="bg-emerald-950/50 border border-emerald-500/35 rounded-xl px-2.5 py-1.5 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 live-dot"></span>
+                        <div>
+                            <div class="text-[10px] text-emerald-200/80 leading-none">दैनिक शिल्लक</div>
+                            <div id="ui-daily-timer" class="font-mono-num text-sm font-bold text-emerald-300 mt-0.5">30:00</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- दुसरी ओळ: ५ सेशन्स प्रोग्रेस पिल्स + डेमो/टेस्ट बटणे -->
+            <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-800/70">
+                <div class="flex items-center gap-2.5">
+                    <span id="ui-sessions-label" class="text-xs font-bold text-slate-200">आजची सेशन्स: 0 / 5 पूर्ण</span>
+                    <div id="session-dots-container" class="flex items-center gap-1.5">
+                        <!-- ५ पिल्स JS द्वारे रेंडर होतील -->
+                    </div>
+                </div>
+
+                <!-- झटपट टेस्टिंग कंट्रोल्स -->
+                <div class="flex items-center gap-1.5 flex-wrap">
+                    <button onclick="skipToNextTask()" class="text-[11px] font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg px-2.5 py-1.5 transition">
+                        ⏭ पुढचा टास्क (२ मि.)
+                    </button>
+                    <button onclick="completeCurrentSession(true)" class="text-[11px] font-semibold bg-sky-500/15 hover:bg-sky-500/25 text-sky-300 border border-sky-500/30 rounded-lg px-2.5 py-1.5 transition">
+                        ⏩ सेशन पूर्ण करा (६ मि.)
+                    </button>
+                    <button onclick="trigger24HourLock()" class="text-[11px] font-semibold bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 rounded-lg px-2.5 py-1.5 transition">
+                        🔒 २४-तास लॉक पहा
+                    </button>
+                    <button onclick="resetFullApp()" class="text-[11px] font-semibold bg-rose-500/15 hover:bg-rose-500/25 text-rose-300 border border-rose-500/30 rounded-lg px-2.5 py-1.5 transition">
+                        🔄 रीसेट डेमो
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- मुख्य विभाग -->
+    <main class="flex-1 w-full max-w-xl mx-auto px-4 py-5 flex flex-col justify-center">
+
+        <!-- १. सक्रिय सेशन व टास्क स्क्रीन (Active Session View) -->
+        <section id="view-active-session" class="space-y-4">
+            <!-- सेशनमधील ३ टास्क स्टेपर -->
+            <div class="glass-panel rounded-2xl p-1.5 grid grid-cols-3 gap-1.5">
+                <div id="task-pill-0" class="text-center py-2 px-1 rounded-xl text-xs font-bold bg-indigo-500/25 text-indigo-200 border border-indigo-400/40 transition">
+                    १. मेमरी फ्लॅश
+                </div>
+                <div id="task-pill-1" class="text-center py-2 px-1 rounded-xl text-xs font-semibold text-slate-400 transition">
+                    २. लॉजिक शिफ्ट
+                </div>
+                <div id="task-pill-2" class="text-center py-2 px-1 rounded-xl text-xs font-semibold text-slate-400 transition">
+                    ३. फोकस फिल्टर
+                </div>
+            </div>
+
+            <!-- टास्क शीर्षक -->
+            <div class="text-center space-y-1">
+                <span id="ui-task-badge" class="inline-block text-[11px] font-bold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-400/30">
+                    सेशन १ / ५ • टास्क १ / ३
+                </span>
+                <h2 id="ui-task-title" class="text-2xl font-extrabold text-white">मेमरी फ्लॅश (Memory Flash)</h2>
+                <p id="ui-task-desc" class="text-xs sm:text-sm text-slate-400">चौकटींचा रंग आणि क्रम लक्षात ठेवा व त्याच क्रमाने निवडा.</p>
+            </div>
+
+            <!-- लाइव्ह आकडेवारी -->
+            <div class="grid grid-cols-3 gap-2.5">
+                <div class="glass-panel rounded-2xl p-2.5 text-center">
+                    <div class="text-[11px] text-slate-400">एकूण गुण</div>
+                    <div id="ui-score" class="font-mono-num text-lg font-extrabold text-emerald-400">0</div>
+                </div>
+                <div class="glass-panel rounded-2xl p-2.5 text-center">
+                    <div class="text-[11px] text-slate-400">अचूकता</div>
+                    <div id="ui-accuracy" class="font-mono-num text-lg font-extrabold text-sky-400">100%</div>
+                </div>
+                <div class="glass-panel rounded-2xl p-2.5 text-center">
+                    <div class="text-[11px] text-slate-400">सलग बरोबर (Streak)</div>
+                    <div id="ui-streak" class="font-mono-num text-lg font-extrabold text-amber-400">0</div>
+                </div>
+            </div>
+
+            <!-- सूचना / नियम फलक -->
+            <div id="status-banner" class="glass-panel rounded-2xl px-4 py-3 text-center transition-all">
+                <div id="banner-main" class="text-sm sm:text-base font-bold text-white">६-मिनिटांचे सेशन सुरू करण्यासाठी खालील बटण दाबा</div>
+                <div id="banner-sub" class="text-xs text-slate-400 mt-0.5">प्रत्येक टास्क २ मिनिटे चालेल (एकूण ३ टास्क = १ सेशन)</div>
+            </div>
+
+            <!-- टास्क १: मेमरी फ्लॅश (Memory Flash) -->
+            <div id="arena-task-0" class="py-1">
+                <div id="memory-grid" class="memory-grid glass-panel p-3.5 rounded-3xl shadow-2xl"></div>
+            </div>
+
+            <!-- टास्क २: लॉजिक शिफ्ट (Logic Shift) -->
+            <div id="arena-task-1" class="hidden glass-panel rounded-3xl p-4 sm:p-5">
+                <div id="logic-options" class="grid grid-cols-3 gap-3"></div>
+            </div>
+
+            <!-- टास्क ३: फोकस फिल्टर (Focus Filter) -->
+            <div id="arena-task-2" class="hidden glass-panel rounded-3xl p-5 text-center space-y-5">
+                <p class="text-xs text-slate-300">आजूबाजूच्या बाणांकडे दुर्लक्ष करा — फक्त <span class="text-indigo-300 font-bold">मधल्या (Center)</span> बाणाची दिशा निवडा!</p>
+                <div id="arrows-row" class="flex items-center justify-center gap-2 sm:gap-3 py-4 px-2 bg-slate-900/90 rounded-2xl border border-slate-800"></div>
+                <div class="grid grid-cols-2 gap-2.5 max-w-xs mx-auto">
+                    <button onclick="handleFocusAnswer('UP')" class="bg-slate-800 hover:bg-indigo-600/30 active:scale-95 border border-slate-700 hover:border-indigo-400 rounded-xl py-3 text-sm font-bold text-white transition">⬆️ वर</button>
+                    <button onclick="handleFocusAnswer('DOWN')" class="bg-slate-800 hover:bg-indigo-600/30 active:scale-95 border border-slate-700 hover:border-indigo-400 rounded-xl py-3 text-sm font-bold text-white transition">⬇️ खाली</button>
+                    <button onclick="handleFocusAnswer('LEFT')" class="bg-slate-800 hover:bg-indigo-600/30 active:scale-95 border border-slate-700 hover:border-indigo-400 rounded-xl py-3 text-sm font-bold text-white transition">⬅️ डावीकडे</button>
+                    <button onclick="handleFocusAnswer('RIGHT')" class="bg-slate-800 hover:bg-indigo-600/30 active:scale-95 border border-slate-700 hover:border-indigo-400 rounded-xl py-3 text-sm font-bold text-white transition">➡️ उजवीकडे</button>
+                </div>
+            </div>
+
+            <!-- मुख्य कृती बटण -->
+            <div id="start-controls" class="pt-1 flex justify-center">
+                <button id="btn-start-session" onclick="startOrResumeSession()" class="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 active:scale-95 text-slate-950 font-extrabold text-base px-8 py-3.5 rounded-2xl shadow-lg shadow-emerald-500/25 transition">
+                    ▶ सेशन सुरू करा (06:00)
+                </button>
+            </div>
+        </section>
+
+        <!-- २. ३-सेकंद टास्क ट्रान्झिशन स्क्रीन -->
+        <section id="view-task-transition" class="hidden">
+            <div class="glass-panel rounded-3xl p-7 text-center space-y-3 border-indigo-500/40 shadow-2xl">
+                <div class="text-4xl">⚡</div>
+                <span class="inline-block text-xs font-bold px-3 py-1 rounded-full bg-indigo-500/20 text-indigo-300">टास्क पूर्ण!</span>
+                <h3 id="trans-title" class="text-xl font-extrabold text-white">मेमरी फ्लॅश पूर्ण झाले</h3>
+                <p id="trans-next-label" class="text-sm text-emerald-300 font-semibold">पुढचा टास्क सुरू होत आहे: लॉजिक शिफ्ट (02:00)</p>
+                <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden mt-3">
+                    <div id="trans-bar" class="h-full bg-gradient-to-r from-emerald-400 to-indigo-400 w-0 transition-all duration-75"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ३. सेशन पूर्ण स्क्रीन (Session 1 ते 4 पूर्ण झाल्यावर) -->
+        <section id="view-session-complete" class="hidden">
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 text-center space-y-5 border-sky-500/35 shadow-2xl">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-sky-500/15 border border-sky-400/40 flex items-center justify-center text-3xl">
+                    🎯
+                </div>
+                <div class="space-y-1">
+                    <span id="sc-badge" class="inline-block text-xs font-bold px-3 py-1 rounded-full bg-sky-500/20 text-sky-300">
+                        सेशन १ / ५ पूर्ण (६ मिनिटे)
+                    </span>
+                    <h2 class="text-2xl font-extrabold text-white">शाब्बास! आजचा १ मेंदू-ब्रेक पूर्ण झाला</h2>
+                    <p id="sc-remaining-msg" class="text-xs sm:text-sm text-slate-300">
+                        आजची आणखी ४ सेशन्स (२४ मिनिटे) शिल्लक आहेत.
+                    </p>
+                </div>
+
+                <!-- सेशन रिपोर्ट कार्ड्स -->
+                <div class="grid grid-cols-3 gap-2.5">
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
+                        <div class="text-[11px] text-slate-400">अचूकता</div>
+                        <div id="sc-accuracy" class="font-mono-num text-lg font-extrabold text-sky-400">100%</div>
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
+                        <div class="text-[11px] text-slate-400">बरोबर उत्तरे</div>
+                        <div id="sc-correct" class="font-mono-num text-lg font-extrabold text-emerald-400">0</div>
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
+                        <div class="text-[11px] text-slate-400">उरलेली सेशन्स</div>
+                        <div id="sc-left-sessions" class="font-mono-num text-lg font-extrabold text-amber-400">4 / 5</div>
+                    </div>
+                </div>
+
+                <!-- दोन स्पष्ट पर्याय -->
+                <div class="flex flex-col sm:flex-row gap-3 pt-2">
+                    <button onclick="startNextSessionAfterComplete()" class="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 font-extrabold text-sm py-3.5 px-4 rounded-2xl shadow-lg shadow-emerald-500/20 transition">
+                        ▶ पुढचे ६-मिनिटांचे सेशन सुरू करा
+                    </button>
+                    <button onclick="enterCalmBreakMode()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold text-sm py-3.5 px-4 rounded-2xl transition">
+                        ☕ ब्रेक घ्या (नंतर या)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- ४. शांत ब्रेक अवस्था (Calm Break State) -->
+        <section id="view-calm-break" class="hidden">
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 text-center space-y-5 border-emerald-500/30 shadow-2xl">
+                <div class="text-4xl">🌿</div>
+                <div class="space-y-1.5">
+                    <span id="break-badge" class="inline-block text-xs font-bold px-3 py-1 rounded-full bg-emerald-500/15 text-emerald-300">
+                        ब्रेक मोड • १ / ५ सेशन्स पूर्ण
+                    </span>
+                    <h2 class="text-2xl font-extrabold text-white">मेंदूला थोडी विश्रांती द्या</h2>
+                    <p class="text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
+                        तुमचे प्रगती गुण सुरक्षित आहेत. थोडे पाणी प्या, डोळ्यांना विश्रांती द्या किंवा अभ्यास करा — जेव्हा तयार असाल तेव्हा पुढचे ६ मिनिटांचे सेशन सुरू करा.
+                    </p>
+                </div>
+
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 text-xs text-slate-300">
+                    उरलेली दैनिक क्षमता: <strong id="break-remaining-info" class="text-emerald-400">४ सेशन्स (२४ मिनिटे)</strong>
+                </div>
+
+                <button onclick="startNextSessionAfterComplete()" class="w-full sm:w-auto bg-gradient-to-r from-indigo-500 to-sky-500 hover:from-indigo-400 hover:to-sky-400 text-white font-extrabold text-sm px-8 py-3.5 rounded-2xl shadow-lg transition">
+                    ▶ पुढचे सेशन सुरू करा (06:00)
+                </button>
+            </div>
+        </section>
+
+        <!-- ५. २४-तास लॉक स्क्रीन (All 5 Sessions / 30 Min Complete) -->
+        <section id="view-24h-lock" class="hidden">
+            <div class="glass-panel rounded-3xl p-6 sm:p-8 text-center space-y-5 border-amber-500/40 shadow-2xl">
+                <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-500/15 border border-amber-400/40 flex items-center justify-center text-3xl">
+                    🔒
+                </div>
+
+                <div class="space-y-1">
+                    <span class="inline-block text-xs font-bold px-3 py-1 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/30">
+                        Intentional Scarcity • दैनिक मर्यादा पूर्ण
+                    </span>
+                    <h2 class="text-2xl font-extrabold text-white">आजचे ५/५ सेशन्स (३० मिनिटे) पूर्ण झाले! 🎉</h2>
+                    <p class="text-xs sm:text-sm text-slate-400">
+                        अति-स्क्रीन वापर टाळण्यासाठी ॲप पुढील २४ तासांसाठी लॉक झाले आहे.
+                    </p>
+                </div>
+
+                <!-- थेट २४-तासांचा काउंटडाउन -->
+                <div class="bg-slate-950/90 border border-slate-800 rounded-2xl py-3.5 px-4">
+                    <div class="text-[11px] text-slate-400 mb-1">पुढचे सेशन उघडण्यासाठी उरलेला वेळ</div>
+                    <div id="ui-24h-countdown" class="font-mono-num text-3xl font-extrabold text-emerald-400 tracking-wider">23:59:59</div>
+                </div>
+
+                <!-- संपूर्ण दिवसाचा कॉग्निटिव्ह सारांश -->
+                <div class="grid grid-cols-3 gap-2.5">
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
+                        <div class="text-[11px] text-slate-400">एकूण गुण</div>
+                        <div id="lock-total-score" class="font-mono-num text-lg font-extrabold text-emerald-400">0</div>
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
+                        <div class="text-[11px] text-slate-400">एकूण अचूकता</div>
+                        <div id="lock-total-acc" class="font-mono-num text-lg font-extrabold text-sky-400">100%</div>
+                    </div>
+                    <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3">
+                        <div class="text-[11px] text-slate-400">सर्वोत्तम स्ट्रीक</div>
+                        <div id="lock-best-streak" class="font-mono-num text-lg font-extrabold text-amber-400">0</div>
+                    </div>
+                </div>
+
+                <!-- Gen Z ऑफलाइन चॅलेंज कार्ड -->
+                <div class="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-4 text-left flex items-start gap-3">
+                    <span class="text-2xl">📵</span>
+                    <div>
+                        <div class="text-xs font-extrabold text-emerald-300 uppercase tracking-wide">आजचे ऑफलाइन चॅलेंज (Gen Z Detox)</div>
+                        <p class="text-xs sm:text-sm text-slate-200 mt-1 leading-relaxed">
+                            फोन बाजूला ठेवून किमान १ तास पुस्तक वाचा, मैदानावर खेळा किंवा मित्रांशी प्रत्यक्ष बोला.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pt-1">
+                    <button onclick="resetFullApp()" class="text-xs font-semibold text-slate-400 hover:text-white underline underline-offset-4 transition">
+                        डेमो रीसेट करा (पुन्हा चाचणी घेण्यासाठी)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- फूटर -->
+    <footer class="text-center text-[11px] text-slate-500 py-3 px-4 border-t border-slate-800/60">
+        मेमरी & फोकस जिम • ५ सेशन्स × ६ मिनिटे = ३० मिनिटे दैनिक शिस्त | स्थानिक स्टोरेज (LocalStorage) सक्रिय
+    </footer>
+
+    <script>
+        // --- १. स्थिर मूल्ये व स्टोरेज की ---
+        const STORAGE_KEY = 'brain_gym_5x6_state_v1';
+        const TOTAL_SESSIONS_PER_DAY = 5;
+        const SESSION_DURATION_SEC = 6 * 60; // 360 सेकंद (6 मिनिटे)
+        const TASK_DURATION_SEC = 2 * 60;    // 120 सेकंद (2 मिनिटे)
+        const DAILY_TOTAL_SEC = TOTAL_SESSIONS_PER_DAY * SESSION_DURATION_SEC; // 1800 सेकंद (30 मिनिटे)
+        const LOCK_DURATION_MS = 24 * 60 * 60 * 1000; // 24 तास
+
+        const TASKS_INFO = [
+            {
+                title: 'मेमरी फ्लॅश (Memory Flash)',
+                desc: 'चौकटींचा रंग आणि क्रम लक्षात ठेवा व त्याच क्रमाने निवडा.'
+            },
+            {
+                title: 'लॉजिक शिफ्ट (Logic Shift)',
+                desc: 'वर दिलेला नियम वाचा आणि त्यानुसार अचूक रंग किंवा आकार निवडा.'
+            },
+            {
+                title: 'फोकस फिल्टर (Focus Filter)',
+                desc: 'आजूबाजूच्या बाणांकडे दुर्लक्ष करून फक्त मधल्या बाणाची दिशा ओळखा.'
+            }
+        ];
+
+        // --- २. ॲप स्टेट (State) ---
+        let state = {
+            completedSessions: 0,      // 0 ते 5
+            sessionSecondsLeft: SESSION_DURATION_SEC,
+            taskSecondsLeft: TASK_DURATION_SEC,
+            currentTaskIdx: 0,         // 0 = Memory, 1 = Logic, 2 = Focus
+            totalScore: 0,
+            totalAttempts: 0,
+            correctAttempts: 0,
+            sessionAttempts: 0,
+            sessionCorrect: 0,
+            currentStreak: 0,
+            bestStreak: 0,
+            viewMode: 'ACTIVE',        // 'ACTIVE', 'SESSION_COMPLETE', 'BREAK', 'LOCKED'
+            lockUntilTimestamp: null
+        };
+
+        let isRunning = false;
+        let mainTimerInterval = null;
+        let lockCountdownInterval = null;
+        let memoryShowTimeout = null;
+
+        // --- ३. LocalStorage जतन व लोड करणे ---
+        function saveState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+            } catch (e) {
+                console.warn('Storage save skipped:', e);
+            }
+        }
+
+        function loadState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (raw) {
+                    const parsed = JSON.parse(raw);
+                    state = { ...state, ...parsed };
+                    // जर २४ तासांचा लॉक पूर्ण झाला असेल तर नवीन दिवसासाठी रीसेट करा
+                    if (state.viewMode === 'LOCKED' && state.lockUntilTimestamp && Date.now() >= state.lockUntilTimestamp) {
+                        resetStateValues();
+                    }
+                }
+            } catch (e) {
+                console.warn('Storage load skipped:', e);
+            }
+        }
+
+        function resetStateValues() {
+            state = {
+                completedSessions: 0,
+                sessionSecondsLeft: SESSION_DURATION_SEC,
+                taskSecondsLeft: TASK_DURATION_SEC,
+                currentTaskIdx: 0,
+                totalScore: 0,
+                totalAttempts: 0,
+                correctAttempts: 0,
+                sessionAttempts: 0,
+                sessionCorrect: 0,
+                currentStreak: 0,
+                bestStreak: 0,
+                viewMode: 'ACTIVE',
+                lockUntilTimestamp: null
+            };
+            saveState();
+        }
+
+        // --- ४. हेडर व टायमर UI अपडेट ---
+        function formatMMSS(sec) {
+            const safe = Math.max(0, sec);
+            const m = String(Math.floor(safe / 60)).padStart(2, '0');
+            const s = String(safe % 60).padStart(2, '0');
+            return `${m}:${s}`;
+        }
+
+        function updateHeaderUI() {
+            document.getElementById('ui-task-timer').innerText = formatMMSS(state.taskSecondsLeft);
+            document.getElementById('ui-session-timer').innerText = formatMMSS(state.sessionSecondsLeft);
+
+            // एकूण दैनिक उरलेला वेळ मोजा
+            const remainingSessionsAfterCurrent = Math.max(0, TOTAL_SESSIONS_PER_DAY - state.completedSessions - 1);
+            const totalDailyRemaining = state.completedSessions >= TOTAL_SESSIONS_PER_DAY
+                ? 0
+                : (remainingSessionsAfterCurrent * SESSION_DURATION_SEC) + state.sessionSecondsLeft;
+            document.getElementById('ui-daily-timer').innerText = formatMMSS(totalDailyRemaining);
+
+            // ५ सेशन पिल्स अपडेट करा
+            document.getElementById('ui-sessions-label').innerText = `आजची सेशन्स: ${state.completedSessions} / ${TOTAL_SESSIONS_PER_DAY} पूर्ण`;
+            const dotsEl = document.getElementById('session-dots-container');
+            dotsEl.innerHTML = '';
+            for (let i = 0; i < TOTAL_SESSIONS_PER_DAY; i++) {
+                const pill = document.createElement('span');
+                if (i < state.completedSessions) {
+                    pill.className = 'w-6 h-2.5 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50 transition-all';
+                    pill.title = `सेशन ${i + 1}: पूर्ण`;
+                } else if (i === state.completedSessions && state.viewMode !== 'LOCKED') {
+                    pill.className = 'w-6 h-2.5 rounded-full bg-indigo-400/70 border border-indigo-300 transition-all';
+                    pill.title = `सेशन ${i + 1}: चालू`;
+                } else {
+                    pill.className = 'w-6 h-2.5 rounded-full bg-slate-800 border border-slate-700 transition-all';
+                    pill.title = `सेशन ${i + 1}: शिल्लक`;
+                }
+                dotsEl.appendChild(pill);
+            }
+        }
+
+        function updateStatsUI() {
+            document.getElementById('ui-score').innerText = state.totalScore;
+            const acc = state.totalAttempts === 0 ? 100 : Math.round((state.correctAttempts / state.totalAttempts) * 100);
+            document.getElementById('ui-accuracy').innerText = `${acc}%`;
+            document.getElementById('ui-streak').innerText = state.currentStreak;
+        }
+
+        function showOnlyView(viewId) {
+            const views = [
+                'view-active-session',
+                'view-task-transition',
+                'view-session-complete',
+                'view-calm-break',
+                'view-24h-lock'
+            ];
+            views.forEach(id => {
+                document.getElementById(id).classList.toggle('hidden', id !== viewId);
+            });
+        }
+
+        // --- ५. मुख्य ६-मिनिट सेशन व २-मिनिट टास्क टायमर ---
+        function startMasterLoop() {
+            if (mainTimerInterval) clearInterval(mainTimerInterval);
+            isRunning = true;
+
+            mainTimerInterval = setInterval(() => {
+                if (!isRunning || state.viewMode !== 'ACTIVE') return;
+
+                state.sessionSecondsLeft--;
+                state.taskSecondsLeft--;
+
+                if (state.sessionSecondsLeft <= 0) {
+                    // ६ मिनिटांचे सेशन पूर्ण झाले!
+                    completeCurrentSession(false);
+                    return;
+                }
+
+                if (state.taskSecondsLeft <= 0) {
+                    // २ मिनिटांचा टास्क पूर्ण झाला -> पुढचा टास्क
+                    transitionToNextTaskInSession();
+                    return;
+                }
+
+                updateHeaderUI();
+                if (state.sessionSecondsLeft % 5 === 0) saveState();
+            }, 1000);
+        }
+
+        function setupActiveTaskUI() {
+            const idx = state.currentTaskIdx;
+            const info = TASKS_INFO[idx];
+            const sessionNum = Math.min(TOTAL_SESSIONS_PER_DAY, state.completedSessions + 1);
+
+            document.getElementById('ui-task-badge').innerText = `सेशन ${sessionNum} / ${TOTAL_SESSIONS_PER_DAY} • टास्क ${idx + 1} / 3`;
+            document.getElementById('ui-task-title').innerText = info.title;
+            document.getElementById('ui-task-desc').innerText = info.desc;
+
+            // स्टेपर हायलाइट
+            for (let i = 0; i < 3; i++) {
+                const pill = document.getElementById(`task-pill-${i}`);
+                if (i === idx) {
+                    pill.className = 'text-center py-2 px-1 rounded-xl text-xs font-bold bg-indigo-500/25 text-indigo-200 border border-indigo-400/40 transition';
+                } else if (i < idx) {
+                    pill.className = 'text-center py-2 px-1 rounded-xl text-xs font-bold bg-emerald-500/15 text-emerald-300 transition';
+                } else {
+                    pill.className = 'text-center py-2 px-1 rounded-xl text-xs font-semibold text-slate-400 transition';
+                }
+            }
+
+            // संबंधित खेळाचे क्षेत्र दाखवा
+            document.getElementById('arena-task-0').classList.toggle('hidden', idx !== 0);
+            document.getElementById('arena-task-1').classList.toggle('hidden', idx !== 1);
+            document.getElementById('arena-task-2').classList.toggle('hidden', idx !== 2);
+
+            updateHeaderUI();
+            updateStatsUI();
+        }
+
+        function startOrResumeSession() {
+            state.viewMode = 'ACTIVE';
+            document.getElementById('start-controls').classList.add('hidden');
+            setupActiveTaskUI();
+            startMasterLoop();
+            launchTaskGameplay(state.currentTaskIdx);
+            saveState();
+        }
+
+        function launchTaskGameplay(idx) {
+            clearTimeout(memoryShowTimeout);
+            if (idx === 0) startMemoryRound();
+            else if (idx === 1) startLogicShift();
+            else if (idx === 2) startFocusFilter();
+        }
+
+        function skipToNextTask() {
+            if (state.viewMode !== 'ACTIVE') return;
+            if (state.currentTaskIdx >= 2) {
+                // तिसरा टास्क चालू असेल तर थेट सेशन पूर्ण करा
+                completeCurrentSession(true);
+            } else {
+                // उरलेला टास्कचा वेळ सेशनमधून वजा करा जेणेकरून सेशन टाईम सिंक राहील
+                state.sessionSecondsLeft = Math.max(1, state.sessionSecondsLeft - state.taskSecondsLeft);
+                transitionToNextTaskInSession();
+            }
+        }
+
+        function transitionToNextTaskInSession() {
+            isRunning = false;
+            clearTimeout(memoryShowTimeout);
+            memState = 'IDLE';
+
+            const completedTaskName = TASKS_INFO[state.currentTaskIdx].title;
+            state.currentTaskIdx = Math.min(2, state.currentTaskIdx + 1);
+            state.taskSecondsLeft = TASK_DURATION_SEC;
+            const nextTaskName = TASKS_INFO[state.currentTaskIdx].title;
+            saveState();
+
+            // ३-सेकंद ट्रान्झिशन स्क्रीन दाखवा
+            showOnlyView('view-task-transition');
+            document.getElementById('trans-title').innerText = `${completedTaskName} पूर्ण झाले`;
+            document.getElementById('trans-next-label').innerText = `पुढचा टास्क सुरू होत आहे: ${nextTaskName} (02:00)`;
+
+            const bar = document.getElementById('trans-bar');
+            bar.style.width = '0%';
+            let elapsed = 0;
+            const interval = setInterval(() => {
+                elapsed += 50;
+                bar.style.width = `${Math.min(100, (elapsed / 3000) * 100)}%`;
+                if (elapsed >= 3000) {
+                    clearInterval(interval);
+                    showOnlyView('view-active-session');
+                    setupActiveTaskUI();
+                    isRunning = true;
+                    launchTaskGameplay(state.currentTaskIdx);
+                }
+            }, 50);
+        }
+
+        // --- ६. सेशन पूर्ण होणे आणि २४-तास लॉक ---
+        function completeCurrentSession(isManual) {
+            isRunning = false;
+            clearInterval(mainTimerInterval);
+            clearTimeout(memoryShowTimeout);
+            memState = 'IDLE';
+
+            if (state.completedSessions < TOTAL_SESSIONS_PER_DAY) {
+                state.completedSessions++;
+            }
+
+            // ५ पैकी ५ सेशन्स पूर्ण झाली असतील तर २४ तासांचा लॉक लावा
+            if (state.completedSessions >= TOTAL_SESSIONS_PER_DAY) {
+                trigger24HourLock();
+                return;
+            }
+
+            state.viewMode = 'SESSION_COMPLETE';
+            updateHeaderUI();
+            saveState();
+
+            const leftSessions = TOTAL_SESSIONS_PER_DAY - state.completedSessions;
+            const leftMins = leftSessions * 6;
+            const sessAcc = state.sessionAttempts === 0
+                ? 100
+                : Math.round((state.sessionCorrect / state.sessionAttempts) * 100);
+
+            document.getElementById('sc-badge').innerText = `सेशन ${state.completedSessions} / ${TOTAL_SESSIONS_PER_DAY} पूर्ण (६ मिनिटे)`;
+            document.getElementById('sc-remaining-msg').innerText = `आजची आणखी ${leftSessions} सेशन्स (${leftMins} मिनिटे) शिल्लक आहेत.`;
+            document.getElementById('sc-accuracy').innerText = `${sessAcc}%`;
+            document.getElementById('sc-correct').innerText = `${state.sessionCorrect} / ${state.sessionAttempts}`;
+            document.getElementById('sc-left-sessions').innerText = `${leftSessions} / ${TOTAL_SESSIONS_PER_DAY}`;
+
+            showOnlyView('view-session-complete');
+        }
+
+        function startNextSessionAfterComplete() {
+            state.sessionSecondsLeft = SESSION_DURATION_SEC;
+            state.taskSecondsLeft = TASK_DURATION_SEC;
+            state.currentTaskIdx = 0;
+            state.sessionAttempts = 0;
+            state.sessionCorrect = 0;
+            state.viewMode = 'ACTIVE';
+
+            showOnlyView('view-active-session');
+            document.getElementById('start-controls').classList.add('hidden');
+            setupActiveTaskUI();
+            startMasterLoop();
+            launchTaskGameplay(0);
+            saveState();
+        }
+
+        function enterCalmBreakMode() {
+            state.sessionSecondsLeft = SESSION_DURATION_SEC;
+            state.taskSecondsLeft = TASK_DURATION_SEC;
+            state.currentTaskIdx = 0;
+            state.sessionAttempts = 0;
+            state.sessionCorrect = 0;
+            state.viewMode = 'BREAK';
+            saveState();
+
+            const leftSessions = TOTAL_SESSIONS_PER_DAY - state.completedSessions;
+            document.getElementById('break-badge').innerText = `ब्रेक मोड • ${state.completedSessions} / ${TOTAL_SESSIONS_PER_DAY} सेशन्स पूर्ण`;
+            document.getElementById('break-remaining-info').innerText = `${leftSessions} सेशन्स (${leftSessions * 6} मिनिटे)`;
+            showOnlyView('view-calm-break');
+        }
+
+        function trigger24HourLock() {
+            isRunning = false;
+            clearInterval(mainTimerInterval);
+            clearTimeout(memoryShowTimeout);
+
+            state.completedSessions = TOTAL_SESSIONS_PER_DAY;
+            state.sessionSecondsLeft = 0;
+            state.taskSecondsLeft = 0;
+            state.viewMode = 'LOCKED';
+            if (!state.lockUntilTimestamp || state.lockUntilTimestamp <= Date.now()) {
+                state.lockUntilTimestamp = Date.now() + LOCK_DURATION_MS;
+            }
+            saveState();
+            updateHeaderUI();
+
+            const totalAcc = state.totalAttempts === 0 ? 100 : Math.round((state.correctAttempts / state.totalAttempts) * 100);
+            document.getElementById('lock-total-score').innerText = state.totalScore;
+            document.getElementById('lock-total-acc').innerText = `${totalAcc}%`;
+            document.getElementById('lock-best-streak').innerText = state.bestStreak;
+
+            showOnlyView('view-24h-lock');
+            start24HourCountdown();
+        }
+
+        function start24HourCountdown() {
+            if (lockCountdownInterval) clearInterval(lockCountdownInterval);
+            const renderClock = () => {
+                const diffMs = Math.max(0, state.lockUntilTimestamp - Date.now());
+                const totalSec = Math.floor(diffMs / 1000);
+                const h = String(Math.floor(totalSec / 3600)).padStart(2, '0');
+                const m = String(Math.floor((totalSec % 3600) / 60)).padStart(2, '0');
+                const s = String(totalSec % 60).padStart(2, '0');
+                document.getElementById('ui-24h-countdown').innerText = `${h}:${m}:${s}`;
+            };
+            renderClock();
+            lockCountdownInterval = setInterval(renderClock, 1000);
+        }
+
+        function resetFullApp() {
+            isRunning = false;
+            clearInterval(mainTimerInterval);
+            clearInterval(lockCountdownInterval);
+            clearTimeout(memoryShowTimeout);
+            memRound = 1;
+            logicCount = 0;
+
+            resetStateValues();
+            initMemoryGrid();
+            setupActiveTaskUI();
+            showOnlyView('view-active-session');
+            document.getElementById('start-controls').classList.remove('hidden');
+            document.getElementById('btn-start-session').innerText = '▶ सेशन सुरू करा (06:00)';
+            setBanner('६-मिनिटांचे सेशन सुरू करण्यासाठी खालील बटण दाबा', 'प्रत्येक टास्क २ मिनिटे चालेल (एकूण ३ टास्क = १ सेशन)');
+        }
+
+        // --- ७. गुण व अचूकता नोंद ---
+        function recordAttempt(isCorrect, points) {
+            state.totalAttempts++;
+            state.sessionAttempts++;
+            if (isCorrect) {
+                state.correctAttempts++;
+                state.sessionCorrect++;
+                state.totalScore += points;
+                state.currentStreak++;
+                if (state.currentStreak > state.bestStreak) {
+                    state.bestStreak = state.currentStreak;
+                }
+            } else {
+                state.currentStreak = 0;
+            }
+            updateStatsUI();
+        }
+
+        function setBanner(main, sub, colorClass = 'text-white') {
+            const mainEl = document.getElementById('banner-main');
+            mainEl.innerText = main;
+            mainEl.className = `text-sm sm:text-base font-bold ${colorClass}`;
+            document.getElementById('banner-sub').innerText = sub;
+        }
+
+        // --- ८. टास्क १: मेमरी फ्लॅश (Memory Flash) ---
+        let memRound = 1;
+        let memSequence = [];
+        let memStep = 0;
+        let memState = 'IDLE';
+
+        const TILE_PALETTE = [
+            { bg: '#38bdf8', border: '#bae6fd' },
+            { bg: '#fbbf24', border: '#fef08a' },
+            { bg: '#34d399', border: '#a7f3d0' },
+            { bg: '#fb7185', border: '#fecdd3' },
+            { bg: '#c084fc', border: '#e9d5ff' }
+        ];
+
+        function initMemoryGrid() {
+            const grid = document.getElementById('memory-grid');
+            grid.innerHTML = '';
+            for (let i = 0; i < 9; i++) {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'mem-tile';
+                btn.onclick = () => onMemoryTileTap(i);
+                grid.appendChild(btn);
+            }
+        }
+
+        function resetMemoryTilesVisual() {
+            const tiles = document.getElementById('memory-grid').children;
+            for (let t of tiles) {
+                t.style.backgroundColor = 'rgba(30, 41, 59, 0.9)';
+                t.style.borderColor = 'rgba(71, 85, 105, 0.55)';
+                t.style.boxShadow = 'none';
+                t.innerText = '';
+            }
+        }
+
+        function startMemoryRound() {
+            memState = 'SHOWING';
+            memStep = 0;
+            memSequence = [];
+            resetMemoryTilesVisual();
+
+            const seqLength = Math.min(6, 3 + Math.floor((memRound - 1) / 2) + Math.floor(state.completedSessions / 2));
+            setBanner(`क्रम लक्षात ठेवा... (${seqLength} चौकटी)`, 'चौकटी कोणत्या क्रमाने चमकतात ते नीट पहा.', 'text-amber-300');
+
+            const pool = [0, 1, 2, 3, 4, 5, 6, 7, 8];
+            for (let i = 0; i < seqLength; i++) {
+                const idx = pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
+                memSequence.push({ index: idx, color: TILE_PALETTE[i % TILE_PALETTE.length] });
+            }
+
+            const stepDelay = 620;
+            memSequence.forEach((item, i) => {
+                setTimeout(() => {
+                    if (state.currentTaskIdx !== 0 || !isRunning) return;
+                    resetMemoryTilesVisual();
+                    const tile = document.getElementById('memory-grid').children[item.index];
+                    tile.style.backgroundColor = item.color.bg;
+                    tile.style.borderColor = item.color.border;
+                    tile.style.boxShadow = `0 0 20px ${item.color.bg}`;
+                    tile.innerText = i + 1;
+                }, i * stepDelay + 250);
+            });
+
+            memoryShowTimeout = setTimeout(() => {
+                if (state.currentTaskIdx !== 0 || !isRunning) return;
+                resetMemoryTilesVisual();
+                memState = 'INPUT';
+                setBanner('आता त्याच क्रमाने चौकटींवर टॅप करा!', `पायरी १ / ${memSequence.length}`, 'text-emerald-300');
+            }, memSequence.length * stepDelay + 420);
+        }
+
+        function onMemoryTileTap(idx) {
+            if (!isRunning || state.currentTaskIdx !== 0 || memState !== 'INPUT') return;
+            const target = memSequence[memStep];
+            const tile = document.getElementById('memory-grid').children[idx];
+
+            if (idx === target.index) {
+                tile.style.backgroundColor = target.color.bg;
+                tile.style.borderColor = '#ffffff';
+                tile.innerText = '✓';
+                memStep++;
+
+                if (memStep < memSequence.length) {
+                    setBanner('छान! पुढची चौकट निवडा...', `पायरी ${memStep + 1} / ${memSequence.length}`, 'text-emerald-300');
+                } else {
+                    memState = 'WAIT';
+                    memRound++;
+                    recordAttempt(true, 15);
+                    setBanner('बरोबर! पुढची फेरी येत आहे 🎉', 'लक्ष केंद्रित ठेवा...', 'text-emerald-300');
+                    setTimeout(() => {
+                        if (isRunning && state.currentTaskIdx === 0) startMemoryRound();
+                    }, 800);
+                }
+            } else {
+                memState = 'WAIT';
+                recordAttempt(false, 0);
+                tile.style.backgroundColor = '#f43f5e';
+                tile.style.color = '#ffffff';
+                tile.innerText = '✕';
+
+                const grid = document.getElementById('memory-grid');
+                grid.classList.add('shake');
+                setTimeout(() => grid.classList.remove('shake'), 350);
+
+                setBanner('चुकले! नवीन क्रम येत आहे...', 'शांतपणे पुन्हा प्रयत्न करा.', 'text-rose-300');
+                setTimeout(() => {
+                    if (isRunning && state.currentTaskIdx === 0) startMemoryRound();
+                }, 900);
+            }
+        }
+
+        // --- ९. टास्क २: लॉजिक शिफ्ट (Logic Shift) ---
+        let logicCount = 0;
+        let activeRule = null;
+
+        const LOGIC_SHAPES = [
+            { id: 'circle', name: 'वर्तुळ' },
+            { id: 'square', name: 'चौरस' },
+            { id: 'triangle', name: 'त्रिकोण' }
+        ];
+
+        const LOGIC_COLORS = [
+            { id: 'blue', name: 'निळा', hex: '#38bdf8' },
+            { id: 'red', name: 'लाल', hex: '#f43f5e' },
+            { id: 'green', name: 'हिरवा', hex: '#10b981' }
+        ];
+
+        function startLogicShift() {
+            logicCount = 0;
+            activeRule = null;
+            renderNextLogicQuestion();
+        }
+
+        function renderNextLogicQuestion() {
+            if (state.currentTaskIdx !== 1) return;
+
+            const shouldShiftRule = !activeRule || (logicCount > 0 && logicCount % 4 === 0);
+            if (shouldShiftRule) {
+                const pickColorRule = Math.random() > 0.5;
+                if (pickColorRule) {
+                    const c = LOGIC_COLORS[Math.floor(Math.random() * LOGIC_COLORS.length)];
+                    activeRule = { type: 'color', id: c.id, label: `नियम: फक्त '${c.name}' रंग निवडा` };
+                } else {
+                    const s = LOGIC_SHAPES[Math.floor(Math.random() * LOGIC_SHAPES.length)];
+                    activeRule = { type: 'shape', id: s.id, label: `नियम: फक्त '${s.name}' आकार निवडा` };
+                }
+            }
+
+            const bannerEl = document.getElementById('status-banner');
+            if (shouldShiftRule && logicCount > 0) {
+                bannerEl.classList.add('rule-pop', 'border-amber-400/60', 'bg-amber-950/30');
+                setTimeout(() => bannerEl.classList.remove('rule-pop', 'border-amber-400/60', 'bg-amber-950/30'), 650);
+                setBanner(`⚠️ नियम बदलला! ${activeRule.label}`, 'नवीन नियमानुसार पटकन निवडा', 'text-amber-300');
+            } else {
+                setBanner(activeRule.label, `प्रश्न ${logicCount + 1} • दर ४ प्रश्नांनी नियम बदलतो`, 'text-indigo-200');
+            }
+
+            const matches = [];
+            const nonMatches = [];
+            LOGIC_SHAPES.forEach(s => {
+                LOGIC_COLORS.forEach(c => {
+                    const ok = activeRule.type === 'color' ? c.id === activeRule.id : s.id === activeRule.id;
+                    if (ok) matches.push({ shape: s, color: c, ok: true });
+                    else nonMatches.push({ shape: s, color: c, ok: false });
+                });
+            });
+
+            const correctOpt = matches[Math.floor(Math.random() * matches.length)];
+            nonMatches.sort(() => Math.random() - 0.5);
+            const choices = [correctOpt, nonMatches[0], nonMatches[1]].sort(() => Math.random() - 0.5);
+
+            const container = document.getElementById('logic-options');
+            container.innerHTML = '';
+            choices.forEach(item => {
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'aspect-square bg-slate-800/90 hover:bg-slate-800 border-2 border-slate-700 hover:border-indigo-400 active:scale-95 rounded-2xl flex flex-col items-center justify-center gap-2 p-2 transition';
+                btn.innerHTML = `${buildShapeSvg(item.shape.id, item.color.hex)}<span class="text-[11px] font-semibold text-slate-300">${item.color.name} ${item.shape.name}</span>`;
+                btn.onclick = () => onLogicOptionTap(item.ok, btn);
+                container.appendChild(btn);
+            });
+        }
+
+        function buildShapeSvg(shapeId, hex) {
+            if (shapeId === 'circle') return `<svg width="48" height="48" viewBox="0 0 60 60"><circle cx="30" cy="30" r="22" fill="${hex}"/></svg>`;
+            if (shapeId === 'square') return `<svg width="48" height="48" viewBox="0 0 60 60"><rect x="10" y="10" width="40" height="40" rx="8" fill="${hex}"/></svg>`;
+            return `<svg width="48" height="48" viewBox="0 0 60 60"><polygon points="30,8 52,50 8,50" fill="${hex}"/></svg>`;
+        }
+
+        function onLogicOptionTap(isOk, btnEl) {
+            if (!isRunning || state.currentTaskIdx !== 1) return;
+            logicCount++;
+            recordAttempt(isOk, 10);
+
+            if (isOk) {
+                btnEl.style.borderColor = '#10b981';
+                btnEl.style.backgroundColor = 'rgba(16, 185, 129, 0.2)';
+            } else {
+                btnEl.style.borderColor = '#f43f5e';
+                btnEl.style.backgroundColor = 'rgba(244, 63, 94, 0.2)';
+                btnEl.classList.add('shake');
+            }
+
+            setTimeout(() => {
+                if (isRunning && state.currentTaskIdx === 1) renderNextLogicQuestion();
+            }, 240);
+        }
+
+        // --- १०. टास्क ३: फोकस फिल्टर (Focus Filter) ---
+        const ARROW_DIRS = [
+            { id: 'UP', icon: '⬆️' },
+            { id: 'DOWN', icon: '⬇️' },
+            { id: 'LEFT', icon: '⬅️' },
+            { id: 'RIGHT', icon: '➡️' }
+        ];
+        let targetArrowDir = 'RIGHT';
+
+        function startFocusFilter() {
+            renderNextArrowRow();
+        }
+
+        function renderNextArrowRow() {
+            if (state.currentTaskIdx !== 2) return;
+            const center = ARROW_DIRS[Math.floor(Math.random() * ARROW_DIRS.length)];
+            const flank = ARROW_DIRS[Math.floor(Math.random() * ARROW_DIRS.length)];
+            targetArrowDir = center.id;
+
+            setBanner('मधल्या बाणाची दिशा कोणती?', 'आजूबाजूच्या बाणांकडे दुर्लक्ष करा!', 'text-sky-300');
+
+            const row = document.getElementById('arrows-row');
+            row.innerHTML = '';
+            for (let i = 0; i < 5; i++) {
+                const cell = document.createElement('div');
+                if (i === 2) {
+                    cell.className = 'w-12 h-12 rounded-xl bg-indigo-500/25 border-2 border-indigo-400 flex items-center justify-center text-2xl shadow-lg shadow-indigo-500/30 scale-110';
+                    cell.innerText = center.icon;
+                } else {
+                    cell.className = 'w-10 h-10 rounded-xl bg-slate-800/80 border border-slate-700/70 flex items-center justify-center text-xl opacity-80';
+                    cell.innerText = flank.icon;
+                }
+                row.appendChild(cell);
+            }
+        }
+
+        function handleFocusAnswer(dir) {
+            if (!isRunning || state.currentTaskIdx !== 2) return;
+            const ok = dir === targetArrowDir;
+            recordAttempt(ok, 10);
+
+            const row = document.getElementById('arrows-row');
+            if (ok) {
+                row.style.borderColor = '#10b981';
+            } else {
+                row.style.borderColor = '#f43f5e';
+                row.classList.add('shake');
+                setTimeout(() => row.classList.remove('shake'), 300);
+            }
+
+            setTimeout(() => {
+                row.style.borderColor = 'rgb(30 41 59)';
+                if (isRunning && state.currentTaskIdx === 2) renderNextArrowRow();
+            }, 200);
+        }
+
+        // --- ११. प्रारंभ (Page Load) ---
+        window.onload = function () {
+            loadState();
+            initMemoryGrid();
+            updateHeaderUI();
+            updateStatsUI();
+
+            if (state.viewMode === 'LOCKED' || state.completedSessions >= TOTAL_SESSIONS_PER_DAY) {
+                trigger24HourLock();
+            } else if (state.viewMode === 'SESSION_COMPLETE') {
+                // जतन केलेली सेशन पूर्ण स्थिती पुन्हा दाखवा
+                state.completedSessions = Math.max(0, state.completedSessions - 1);
+                completeCurrentSession(true);
+            } else if (state.viewMode === 'BREAK') {
+                enterCalmBreakMode();
+            } else {
+                setupActiveTaskUI();
+                showOnlyView('view-active-session');
+                const isMidSession = state.sessionSecondsLeft < SESSION_DURATION_SEC;
+                document.getElementById('btn-start-session').innerText = isMidSession
+                    ? `▶ सेशन पुढे सुरू करा (${formatMMSS(state.sessionSecondsLeft)})`
+                    : `▶ सेशन ${state.completedSessions + 1} सुरू करा (06:00)`;
+            }
+        };
+    </script>
+</body>
+</html>
